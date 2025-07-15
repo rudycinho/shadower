@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 import re
+import html
 from datetime import timedelta
 import io
 from googletrans import Translator
@@ -9,10 +10,10 @@ from gtts import gTTS
 app = Flask(__name__)
 translator = Translator()
 
-# Parseador de archivos SRT
+# Parseador mejorado de archivos SRT con manejo de caracteres especiales
 def parse_srt(file_path):
     subtitles = []
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, 'r', encoding='utf-8-sig') as f:  # Usar utf-8-sig para BOM
         content = f.read()
         
     blocks = content.strip().split('\n\n')
@@ -23,6 +24,11 @@ def parse_srt(file_path):
                 index = int(lines[0])
                 timecode = lines[1]
                 text = ' '.join(lines[2:])
+                
+                # Decodificar caracteres especiales HTML
+                text = html.unescape(text)
+                # Eliminar etiquetas HTML
+                text = re.sub(r'<[^>]+>', '', text)
                 
                 # Parsear tiempos
                 start_end = timecode.split(' --> ')
@@ -41,9 +47,14 @@ def parse_srt(file_path):
 
 # Convertir tiempo SRT a segundos
 def parse_time(time_str):
-    h, m, s = time_str.split(':')
-    s, ms = s.split(',')
-    return int(h)*3600 + int(m)*60 + int(s) + int(ms)/1000.0
+    parts = time_str.replace(',', ':').split(':')
+    if len(parts) == 4:  # Formato hh:mm:ss:ms
+        h, m, s, ms = map(int, parts)
+        return h*3600 + m*60 + s + ms/1000.0
+    elif len(parts) == 3:  # Formato hh:mm:ss
+        h, m, s = map(int, parts)
+        return h*3600 + m*60 + s
+    return 0
 
 @app.route('/')
 def index():

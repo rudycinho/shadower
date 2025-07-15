@@ -1,170 +1,282 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Line-by-Line Audio Player</title>
+    <title>Dual Mode Audio Player</title>
     <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --text: #34495e;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: var(--light);
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(44, 62, 80, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
         }
         .header {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #4a6fa5;
+            border-bottom: 2px solid var(--primary);
         }
         .header h1 {
-            color: #2c3e50;
+            font-size: 2.2rem;
             margin-bottom: 5px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            color: var(--light);
+            opacity: 0.9;
         }
         .media-selector {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .player-container {
-            background: white;
+        .media-selector label {
+            font-weight: bold;
+            min-width: 100px;
+        }
+        select, button {
+            padding: 10px 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        select {
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .player-section {
+            padding: 20px;
         }
         .audio-player {
             width: 100%;
-            background: #2c3e50;
-            padding: 10px 0;
-        }
-        .line-display {
-            padding: 25px;
-            min-height: 150px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .current-line {
-            font-size: 24px;
-            text-align: center;
-            margin-bottom: 15px;
-            color: #2c3e50;
-            line-height: 1.4;
-        }
-        .translation {
-            font-size: 18px;
-            color: #3498db;
-            text-align: center;
-            font-style: italic;
-            min-height: 30px;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
             padding: 15px;
-            background: #f8f9fa;
-            border-top: 1px solid #eee;
-        }
-        .control-btn {
-            padding: 12px 25px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-        .nav-btn {
-            background: #3498db;
-            color: white;
-        }
-        .play-btn {
-            background: #2ecc71;
-            color: white;
-        }
-        .control-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
+            margin-bottom: 20px;
         }
         .progress-container {
-            padding: 10px 20px;
-            background: #f8f9fa;
+            margin-bottom: 15px;
         }
         .progress-info {
             display: flex;
             justify-content: space-between;
             margin-bottom: 5px;
             font-size: 14px;
-            color: #7f8c8d;
+            color: rgba(255, 255, 255, 0.7);
         }
         .progress-bar {
             height: 8px;
-            background: #ecf0f1;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
             overflow: hidden;
         }
         .progress-fill {
             height: 100%;
-            background: #3498db;
+            background: var(--primary);
             width: 0%;
             transition: width 0.1s;
         }
+        .mode-selector {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .line-display {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 25px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .current-line {
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+            line-height: 1.4;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .translation {
+            font-size: 1.4rem;
+            color: var(--secondary);
+            text-align: center;
+            font-style: italic;
+            min-height: 30px;
+            opacity: 0.9;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .control-btn {
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .nav-btn {
+            background: rgba(52, 152, 219, 0.2);
+            color: white;
+        }
+        .play-btn {
+            background: var(--secondary);
+            color: white;
+        }
+        .play-music-btn {
+            background: var(--accent);
+            color: white;
+        }
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .control-btn:active {
+            transform: translateY(0);
+        }
         .line-counter {
             text-align: center;
-            color: #7f8c8d;
+            color: rgba(255, 255, 255, 0.7);
             margin-top: 10px;
-            font-size: 14px;
+            font-size: 16px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .icon {
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Line-by-Line Audio Player</h1>
-        <p>Listen, learn, and translate lyrics line by line</p>
-    </div>
-    
-    <div class="media-selector">
-        <label for="media-select">Select Media:</label>
-        <select id="media-select">
-            <option value="">-- Select --</option>
-            {% for media in media_files %}
-                <option value="{{ media.mp3 }}" data-srt="{{ media.srt }}">
-                    {{ media.mp3 }} {% if media.srt %}(with subtitles){% endif %}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-    
-    <div class="player-container">
-        <audio id="audioPlayer" class="audio-player" controls></audio>
+    <div class="container">
+        <div class="header">
+            <h1>Dual Mode Music Player</h1>
+            <p>Learn lyrics with TTS or original music fragments</p>
+        </div>
         
-        <div class="progress-container">
-            <div class="progress-info">
-                <span id="currentTime">0:00</span>
-                <span id="totalTime">0:00</span>
+        <div class="media-selector">
+            <label for="media-select">Select Media:</label>
+            <select id="media-select">
+                <option value="">-- Select --</option>
+                {% for media in media_files %}
+                    <option value="{{ media.mp3 }}" data-srt="{{ media.srt }}">
+                        {{ media.mp3 }} {% if media.srt %}(with subtitles){% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="player-section">
+            <div class="audio-player">
+                <audio id="audioPlayer" controls style="width: 100%"></audio>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+            
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span id="currentTime">0:00</span>
+                    <span id="totalTime">0:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
             </div>
-        </div>
-        
-        <div class="line-display">
-            <div id="currentLine" class="current-line">Select a media file to begin</div>
-            <div id="translation" class="translation"></div>
-        </div>
-        
-        <div class="controls">
-            <button id="prevBtn" class="control-btn nav-btn">← Previous</button>
-            <button id="playLineBtn" class="control-btn play-btn">Play Line</button>
-            <button id="nextBtn" class="control-btn nav-btn">Next →</button>
-        </div>
-        
-        <div class="line-counter">
-            Line <span id="currentLineNum">0</span> of <span id="totalLines">0</span>
+            
+            <div class="mode-selector">
+                <button id="ttsModeBtn" class="mode-btn active">TTS Mode</button>
+                <button id="musicModeBtn" class="mode-btn">Music Fragment Mode</button>
+            </div>
+            
+            <div class="line-display">
+                <div id="currentLine" class="current-line">Select a media file to begin</div>
+                <div id="translation" class="translation"></div>
+            </div>
+            
+            <div class="controls">
+                <button id="prevBtn" class="control-btn nav-btn">
+                    <span class="icon">⏮</span> Prev
+                </button>
+                <button id="playLineBtn" class="control-btn play-btn">
+                    <span class="icon">▶</span> Play Line
+                </button>
+                <button id="playMusicBtn" class="control-btn play-music-btn">
+                    <span class="icon">🎵</span> Play Music
+                </button>
+                <button id="nextBtn" class="control-btn nav-btn">
+                    Next <span class="icon">⏭</span>
+                </button>
+            </div>
+            
+            <div class="line-counter">
+                Line <span id="currentLineNum">0</span> of <span id="totalLines">0</span>
+            </div>
         </div>
     </div>
 
@@ -173,6 +285,8 @@
         let currentIndex = -1;
         let audioPlayer;
         let lineAudio = new Audio();
+        let currentMode = 'tts'; // 'tts' or 'music'
+        let musicFragmentTimeout;
         
         document.addEventListener('DOMContentLoaded', () => {
             audioPlayer = document.getElementById('audioPlayer');
@@ -182,6 +296,9 @@
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const playLineBtn = document.getElementById('playLineBtn');
+            const playMusicBtn = document.getElementById('playMusicBtn');
+            const ttsModeBtn = document.getElementById('ttsModeBtn');
+            const musicModeBtn = document.getElementById('musicModeBtn');
             const currentLineNum = document.getElementById('currentLineNum');
             const totalLines = document.getElementById('totalLines');
             const progressFill = document.getElementById('progressFill');
@@ -211,6 +328,19 @@
             
             // Actualizar barra de progreso continuamente
             audioPlayer.addEventListener('timeupdate', updateProgress);
+            
+            // Cambiar entre modos
+            ttsModeBtn.addEventListener('click', () => {
+                ttsModeBtn.classList.add('active');
+                musicModeBtn.classList.remove('active');
+                currentMode = 'tts';
+            });
+            
+            musicModeBtn.addEventListener('click', () => {
+                musicModeBtn.classList.add('active');
+                ttsModeBtn.classList.remove('active');
+                currentMode = 'music';
+            });
             
             // Cargar medios seleccionados
             mediaSelect.addEventListener('change', () => {
@@ -261,12 +391,43 @@
                 }
             });
             
-            // Reproducir línea actual
+            // Reproducir línea actual según el modo
             playLineBtn.addEventListener('click', () => {
                 if (currentIndex >= 0 && currentIndex < subtitles.length) {
                     const line = subtitles[currentIndex];
-                    lineAudio.src = `/tts?text=${encodeURIComponent(line.text)}`;
-                    lineAudio.play();
+                    
+                    if (currentMode === 'tts') {
+                        // Modo TTS: Reproducir con síntesis de voz
+                        lineAudio.src = `/tts?text=${encodeURIComponent(line.text)}`;
+                        lineAudio.play();
+                    } else {
+                        // Modo Música: Saltar al inicio de la línea
+                        audioPlayer.currentTime = line.start;
+                        audioPlayer.play();
+                    }
+                }
+            });
+            
+            // Reproducir fragmento musical de la línea actual
+            playMusicBtn.addEventListener('click', () => {
+                if (currentIndex >= 0 && currentIndex < subtitles.length) {
+                    const line = subtitles[currentIndex];
+                    
+                    // Cancelar cualquier reproducción anterior
+                    if (musicFragmentTimeout) clearTimeout(musicFragmentTimeout);
+                    audioPlayer.pause();
+                    
+                    // Establecer tiempo de inicio
+                    audioPlayer.currentTime = line.start;
+                    audioPlayer.play();
+                    
+                    // Calcular duración del fragmento
+                    const fragmentDuration = (line.end - line.start) * 1000;
+                    
+                    // Detener después de la duración del fragmento
+                    musicFragmentTimeout = setTimeout(() => {
+                        audioPlayer.pause();
+                    }, fragmentDuration);
                 }
             });
             
@@ -292,8 +453,10 @@
                         translationEl.textContent = "Translation error";
                     });
                     
-                    // Saltar al tiempo de la línea en el audio principal
-                    audioPlayer.currentTime = line.start;
+                    // Saltar al tiempo de la línea
+                    if (currentMode === 'music') {
+                        audioPlayer.currentTime = line.start;
+                    }
                 }
             }
         });
