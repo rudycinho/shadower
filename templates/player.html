@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Advanced Audio Player</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .player-container { margin-bottom: 20px; }
+        .subtitle-container { height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
+        .current-subtitle { background-color: #ffffcc; font-weight: bold; }
+        .current-word { background-color: #ffcc00; }
+        .controls { display: flex; gap: 10px; margin: 10px 0; }
+        .word-translation { color: #666; font-style: italic; margin-left: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Advanced Audio Player</h1>
+    
+    <div>
+        <label for="media-select">Select Media:</label>
+        <select id="media-select">
+            <option value="">-- Select --</option>
+            {% for media in media_files %}
+                <option value="{{ media.mp3 }}" data-srt="{{ media.srt }}">
+                    {{ media.mp3 }} {% if media.srt %}(with subtitles){% endif %}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="player-container">
+        <audio id="audioPlayer" controls></audio>
+    </div>
+    
+    <div class="controls">
+        <button id="prevBtn">← Previous</button>
+        <button id="nextBtn">Next →</button>
+        <label>
+            <input type="checkbox" id="autoTranslate"> Auto-translate words
+        </label>
+        <label>
+            Playback Rate:
+            <select id="playbackRate">
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+            </select>
+        </label>
+    </div>
+    
+    <div class="subtitle-container" id="subtitleDisplay"></div>
+    
+    <div>
+        <h3>Word Translation:</h3>
+        <div id="wordTranslation"></div>
+    </div>
+    
+    <script>
+        let subtitles = [];
+        let currentSubIndex = -1;
+        let audioPlayer;
+        let autoTranslateEnabled = false;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            audioPlayer = document.getElementById('audioPlayer');
+            const mediaSelect = document.getElementById('media-select');
+            const subtitleDisplay = document.getElementById('subtitleDisplay');
+            const wordTranslation = document.getElementById('wordTranslation');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const autoTranslate = document.getElementById('autoTranslate');
+            const playbackRate = document.getElementById('playbackRate');
+            
+            // Cargar medios seleccionados
+            mediaSelect.addEventListener('change', () => {
+                const selectedOption = mediaSelect.options[mediaSelect.selectedIndex];
+                const mp3File = selectedOption.value;
+                const srtFile = selectedOption.dataset.srt;
+                
+                if (mp3File) {
+                    audioPlayer.src = `/audio/${encodeURIComponent(mp3File)}`;
+                    currentSubIndex = -1;
+                    subtitleDisplay.innerHTML = '';
+                    wordTranslation.innerHTML = '';
+                    
+                    if (srtFile) {
+                        fetch(`/load_srt/${encodeURIComponent(srtFile)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                subtitles = data;
+                                renderSubtitles();
+                            });
+                    }
+                }
+            });
+            
+            // Control de velocidad
+            playbackRate.addEventListener('change', () => {
+                audioPlayer.playbackRate = parseFloat(playbackRate.value);
+            });
+            
+            // Botones de navegación
+            prevBtn.addEventListener('click', () => {
+                if (currentSubIndex > 0) {
+                    currentSubIndex--;
+                    const sub = subtitles[currentSubIndex];
+                    audioPlayer.currentTime = sub.start;
+                    renderSubtitles();
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentSubIndex < subtitles.length - 1) {
+                    currentSubIndex++;
+                    const sub = subtitles[currentSubIndex];
+                    audioPlayer.currentTime = sub.start;
+                    renderSubtitles();
+                }
+            });
+            
+            // Auto-traducción
+            autoTranslate.addEventListener('change', () => {
+                autoTranslateEnabled = autoTranslate.checked;
+            });
+            
+            // Actualizar subtítulos durante la reproducción
+            audioPlayer.addEventListener('timeupdate', () => {
+                updateSubtitles();
+            });
+            
+            // Función para renderizar todos los subtítulos
+            function renderSubtitles() {
+                subtitleDisplay.innerHTML = '';
+                subtitles.forEach((sub, index) => {
+                    const subEl = document.createElement('div');
+                    subEl.id = `sub-${index}`;
+                    subEl.className = 'subtitle';
+                    subEl.innerHTML = sub.text;
+                    subtitleDisplay.appendChild(subEl);
+                });
+            }
+            
+            // Actualizar subtítulo actual
+            function updateSubtitles() {
+                const currentTime = audioPlayer.currentTime;
+                let newIndex = -1;
+                
+                // Encontrar el subtítulo actual
+                for (let i = 0; i < subtitles.length; i++) {
+                    const sub = subtitles[i];
+                    if (currentTime >= sub.start && currentTime <= sub.end) {
+                        newIndex = i;
+                        break;
+                    }
+                }
+                
+                // Actualizar si cambió el subtítulo
+                if (newIndex !== currentSubIndex) {
+                    if (currentSubIndex >= 0) {
+                        document.getElementById(`sub-${currentSubIndex}`).classList.remove('current-subtitle');
+                    }
+                    currentSubIndex = newIndex;
+                    
+                    if (currentSubIndex >= 0) {
+                        const currentSubEl = document.getElementById(`sub-${currentSubIndex}`);
+                        currentSubEl.classList.add('current-subtitle');
+                        currentSubEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Resaltar palabra actual
+                        highlightCurrentWord(currentTime);
+                    }
+                } else if (currentSubIndex >= 0) {
+                    // Actualizar palabra dentro del mismo subtítulo
+                    highlightCurrentWord(currentTime);
+                }
+            }
+            
+            // Resaltar palabra actual
+            function highlightCurrentWord(currentTime) {
+                const sub = subtitles[currentSubIndex];
+                const words = sub.words;
+                let currentWordIndex = -1;
+                
+                // Encontrar la palabra actual
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    if (currentTime >= word.start && currentTime <= word.end) {
+                        currentWordIndex = i;
+                        break;
+                    }
+                }
+                
+                if (currentWordIndex >= 0) {
+                    const currentSubEl = document.getElementById(`sub-${currentSubIndex}`);
+                    
+                    // Reconstruir texto con palabras resaltadas
+                    let newHTML = '';
+                    words.forEach((word, i) => {
+                        if (i === currentWordIndex) {
+                            newHTML += `<span class="current-word" data-word="${word.text}">${word.text}</span> `;
+                            
+                            // Mostrar traducción si está habilitado
+                            if (autoTranslateEnabled) {
+                                translateWord(word.text);
+                            }
+                        } else {
+                            newHTML += `${word.text} `;
+                        }
+                    });
+                    
+                    currentSubEl.innerHTML = newHTML;
+                    
+                    // Agregar evento para hacer clic en palabras
+                    document.querySelectorAll('.current-word').forEach(el => {
+                        el.addEventListener('click', (e) => {
+                            const word = e.target.dataset.word;
+                            translateWord(word);
+                            playWordAudio(word);
+                        });
+                    });
+                }
+            }
+            
+            // Traducir palabra
+            function translateWord(word) {
+                fetch('/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: word })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    wordTranslation.innerHTML = `<strong>${word}:</strong> <span class="word-translation">${data.translation}</span>`;
+                });
+            }
+            
+            // Reproducir audio de palabra individual
+            function playWordAudio(word) {
+                const audio = new Audio(`/tts?text=${encodeURIComponent(word)}&lang=en`);
+                audio.play();
+            }
+        });
+    </script>
+</body>
+</html>

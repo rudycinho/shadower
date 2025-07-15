@@ -1,0 +1,25 @@
+# Ignorar audios mp3
+*.mp3
+
+# Ignorar archivos de subtítulos
+*.srt
+
+# Ignorar scripts shell
+*.sh
+
+# Ignorar archivos temporales de sistema
+*.swp
+*.tmp
+*~
+
+# Ignorar carpetas de caché comunes
+__pycache__/
+*.pyc
+
+# Ignorar logs
+*.log
+
+# Ignorar carpetas de dependencias (si usas Python)
+venv/
+env/
+
