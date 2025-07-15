@@ -29,25 +29,11 @@ def parse_srt(file_path):
                 start = parse_time(start_end[0])
                 end = parse_time(start_end[1])
                 
-                # Dividir en palabras con tiempos aproximados
-                words = []
-                word_list = text.split()
-                duration = (end - start) / len(word_list)
-                for i, word in enumerate(word_list):
-                    word_start = start + i * duration
-                    word_end = word_start + duration
-                    words.append({
-                        'text': word,
-                        'start': word_start,
-                        'end': word_end
-                    })
-                
                 subtitles.append({
                     'index': index,
                     'start': start,
                     'end': end,
-                    'text': text,
-                    'words': words
+                    'text': text
                 })
             except Exception as e:
                 print(f"Error parsing block: {e}")

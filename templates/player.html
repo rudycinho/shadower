@@ -1,21 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Advanced Audio Player</title>
+    <title>Line-by-Line Audio Player</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .player-container { margin-bottom: 20px; }
-        .subtitle-container { height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
-        .current-subtitle { background-color: #ffffcc; font-weight: bold; }
-        .current-word { background-color: #ffcc00; }
-        .controls { display: flex; gap: 10px; margin: 10px 0; }
-        .word-translation { color: #666; font-style: italic; margin-left: 5px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4a6fa5;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .media-selector {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .player-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .audio-player {
+            width: 100%;
+            background: #2c3e50;
+            padding: 10px 0;
+        }
+        .line-display {
+            padding: 25px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .current-line {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+        .translation {
+            font-size: 18px;
+            color: #3498db;
+            text-align: center;
+            font-style: italic;
+            min-height: 30px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        .control-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .nav-btn {
+            background: #3498db;
+            color: white;
+        }
+        .play-btn {
+            background: #2ecc71;
+            color: white;
+        }
+        .control-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .progress-container {
+            padding: 10px 20px;
+            background: #f8f9fa;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        .line-counter {
+            text-align: center;
+            color: #7f8c8d;
+            margin-top: 10px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
-    <h1>Advanced Audio Player</h1>
+    <div class="header">
+        <h1>Line-by-Line Audio Player</h1>
+        <p>Listen, learn, and translate lyrics line by line</p>
+    </div>
     
-    <div>
+    <div class="media-selector">
         <label for="media-select">Select Media:</label>
         <select id="media-select">
             <option value="">-- Select --</option>
@@ -28,50 +140,77 @@
     </div>
     
     <div class="player-container">
-        <audio id="audioPlayer" controls></audio>
+        <audio id="audioPlayer" class="audio-player" controls></audio>
+        
+        <div class="progress-container">
+            <div class="progress-info">
+                <span id="currentTime">0:00</span>
+                <span id="totalTime">0:00</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        
+        <div class="line-display">
+            <div id="currentLine" class="current-line">Select a media file to begin</div>
+            <div id="translation" class="translation"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" class="control-btn nav-btn">← Previous</button>
+            <button id="playLineBtn" class="control-btn play-btn">Play Line</button>
+            <button id="nextBtn" class="control-btn nav-btn">Next →</button>
+        </div>
+        
+        <div class="line-counter">
+            Line <span id="currentLineNum">0</span> of <span id="totalLines">0</span>
+        </div>
     </div>
-    
-    <div class="controls">
-        <button id="prevBtn">← Previous</button>
-        <button id="nextBtn">Next →</button>
-        <label>
-            <input type="checkbox" id="autoTranslate"> Auto-translate words
-        </label>
-        <label>
-            Playback Rate:
-            <select id="playbackRate">
-                <option value="0.5">0.5x</option>
-                <option value="0.75">0.75x</option>
-                <option value="1" selected>1x</option>
-                <option value="1.25">1.25x</option>
-                <option value="1.5">1.5x</option>
-                <option value="2">2x</option>
-            </select>
-        </label>
-    </div>
-    
-    <div class="subtitle-container" id="subtitleDisplay"></div>
-    
-    <div>
-        <h3>Word Translation:</h3>
-        <div id="wordTranslation"></div>
-    </div>
-    
+
     <script>
         let subtitles = [];
-        let currentSubIndex = -1;
+        let currentIndex = -1;
         let audioPlayer;
-        let autoTranslateEnabled = false;
+        let lineAudio = new Audio();
         
         document.addEventListener('DOMContentLoaded', () => {
             audioPlayer = document.getElementById('audioPlayer');
             const mediaSelect = document.getElementById('media-select');
-            const subtitleDisplay = document.getElementById('subtitleDisplay');
-            const wordTranslation = document.getElementById('wordTranslation');
+            const currentLineEl = document.getElementById('currentLine');
+            const translationEl = document.getElementById('translation');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
-            const autoTranslate = document.getElementById('autoTranslate');
-            const playbackRate = document.getElementById('playbackRate');
+            const playLineBtn = document.getElementById('playLineBtn');
+            const currentLineNum = document.getElementById('currentLineNum');
+            const totalLines = document.getElementById('totalLines');
+            const progressFill = document.getElementById('progressFill');
+            const currentTime = document.getElementById('currentTime');
+            const totalTime = document.getElementById('totalTime');
+            
+            // Formatear tiempo para mostrar
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+            
+            // Actualizar barra de progreso
+            function updateProgress() {
+                if (audioPlayer.duration) {
+                    const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                    progressFill.style.width = `${percent}%`;
+                    currentTime.textContent = formatTime(audioPlayer.currentTime);
+                }
+            }
+            
+            // Actualizar tiempo total
+            audioPlayer.addEventListener('loadedmetadata', () => {
+                totalTime.textContent = formatTime(audioPlayer.duration);
+            });
+            
+            // Actualizar barra de progreso continuamente
+            audioPlayer.addEventListener('timeupdate', updateProgress);
             
             // Cargar medios seleccionados
             mediaSelect.addEventListener('change', () => {
@@ -81,165 +220,81 @@
                 
                 if (mp3File) {
                     audioPlayer.src = `/audio/${encodeURIComponent(mp3File)}`;
-                    currentSubIndex = -1;
-                    subtitleDisplay.innerHTML = '';
-                    wordTranslation.innerHTML = '';
+                    currentIndex = -1;
+                    currentLineEl.textContent = "Loading...";
+                    translationEl.textContent = "";
                     
                     if (srtFile) {
                         fetch(`/load_srt/${encodeURIComponent(srtFile)}`)
                             .then(response => response.json())
                             .then(data => {
                                 subtitles = data;
-                                renderSubtitles();
+                                totalLines.textContent = subtitles.length;
+                                currentIndex = 0;
+                                updateLineDisplay();
+                            })
+                            .catch(error => {
+                                console.error('Error loading subtitles:', error);
+                                currentLineEl.textContent = "Error loading subtitles";
                             });
+                    } else {
+                        subtitles = [];
+                        totalLines.textContent = "0";
+                        currentLineEl.textContent = "No subtitles available";
                     }
                 }
             });
             
-            // Control de velocidad
-            playbackRate.addEventListener('change', () => {
-                audioPlayer.playbackRate = parseFloat(playbackRate.value);
-            });
-            
-            // Botones de navegación
+            // Navegar a línea anterior
             prevBtn.addEventListener('click', () => {
-                if (currentSubIndex > 0) {
-                    currentSubIndex--;
-                    const sub = subtitles[currentSubIndex];
-                    audioPlayer.currentTime = sub.start;
-                    renderSubtitles();
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateLineDisplay();
                 }
             });
             
+            // Navegar a línea siguiente
             nextBtn.addEventListener('click', () => {
-                if (currentSubIndex < subtitles.length - 1) {
-                    currentSubIndex++;
-                    const sub = subtitles[currentSubIndex];
-                    audioPlayer.currentTime = sub.start;
-                    renderSubtitles();
+                if (currentIndex < subtitles.length - 1) {
+                    currentIndex++;
+                    updateLineDisplay();
                 }
             });
             
-            // Auto-traducción
-            autoTranslate.addEventListener('change', () => {
-                autoTranslateEnabled = autoTranslate.checked;
-            });
-            
-            // Actualizar subtítulos durante la reproducción
-            audioPlayer.addEventListener('timeupdate', () => {
-                updateSubtitles();
-            });
-            
-            // Función para renderizar todos los subtítulos
-            function renderSubtitles() {
-                subtitleDisplay.innerHTML = '';
-                subtitles.forEach((sub, index) => {
-                    const subEl = document.createElement('div');
-                    subEl.id = `sub-${index}`;
-                    subEl.className = 'subtitle';
-                    subEl.innerHTML = sub.text;
-                    subtitleDisplay.appendChild(subEl);
-                });
-            }
-            
-            // Actualizar subtítulo actual
-            function updateSubtitles() {
-                const currentTime = audioPlayer.currentTime;
-                let newIndex = -1;
-                
-                // Encontrar el subtítulo actual
-                for (let i = 0; i < subtitles.length; i++) {
-                    const sub = subtitles[i];
-                    if (currentTime >= sub.start && currentTime <= sub.end) {
-                        newIndex = i;
-                        break;
-                    }
+            // Reproducir línea actual
+            playLineBtn.addEventListener('click', () => {
+                if (currentIndex >= 0 && currentIndex < subtitles.length) {
+                    const line = subtitles[currentIndex];
+                    lineAudio.src = `/tts?text=${encodeURIComponent(line.text)}`;
+                    lineAudio.play();
                 }
-                
-                // Actualizar si cambió el subtítulo
-                if (newIndex !== currentSubIndex) {
-                    if (currentSubIndex >= 0) {
-                        document.getElementById(`sub-${currentSubIndex}`).classList.remove('current-subtitle');
-                    }
-                    currentSubIndex = newIndex;
+            });
+            
+            // Actualizar la visualización de la línea
+            function updateLineDisplay() {
+                if (currentIndex >= 0 && currentIndex < subtitles.length) {
+                    const line = subtitles[currentIndex];
+                    currentLineEl.textContent = line.text;
+                    currentLineNum.textContent = currentIndex + 1;
                     
-                    if (currentSubIndex >= 0) {
-                        const currentSubEl = document.getElementById(`sub-${currentSubIndex}`);
-                        currentSubEl.classList.add('current-subtitle');
-                        currentSubEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        // Resaltar palabra actual
-                        highlightCurrentWord(currentTime);
-                    }
-                } else if (currentSubIndex >= 0) {
-                    // Actualizar palabra dentro del mismo subtítulo
-                    highlightCurrentWord(currentTime);
-                }
-            }
-            
-            // Resaltar palabra actual
-            function highlightCurrentWord(currentTime) {
-                const sub = subtitles[currentSubIndex];
-                const words = sub.words;
-                let currentWordIndex = -1;
-                
-                // Encontrar la palabra actual
-                for (let i = 0; i < words.length; i++) {
-                    const word = words[i];
-                    if (currentTime >= word.start && currentTime <= word.end) {
-                        currentWordIndex = i;
-                        break;
-                    }
-                }
-                
-                if (currentWordIndex >= 0) {
-                    const currentSubEl = document.getElementById(`sub-${currentSubIndex}`);
-                    
-                    // Reconstruir texto con palabras resaltadas
-                    let newHTML = '';
-                    words.forEach((word, i) => {
-                        if (i === currentWordIndex) {
-                            newHTML += `<span class="current-word" data-word="${word.text}">${word.text}</span> `;
-                            
-                            // Mostrar traducción si está habilitado
-                            if (autoTranslateEnabled) {
-                                translateWord(word.text);
-                            }
-                        } else {
-                            newHTML += `${word.text} `;
-                        }
+                    // Traducir la línea
+                    fetch('/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: line.text })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        translationEl.textContent = data.translation;
+                    })
+                    .catch(error => {
+                        console.error('Translation error:', error);
+                        translationEl.textContent = "Translation error";
                     });
                     
-                    currentSubEl.innerHTML = newHTML;
-                    
-                    // Agregar evento para hacer clic en palabras
-                    document.querySelectorAll('.current-word').forEach(el => {
-                        el.addEventListener('click', (e) => {
-                            const word = e.target.dataset.word;
-                            translateWord(word);
-                            playWordAudio(word);
-                        });
-                    });
+                    // Saltar al tiempo de la línea en el audio principal
+                    audioPlayer.currentTime = line.start;
                 }
-            }
-            
-            // Traducir palabra
-            function translateWord(word) {
-                fetch('/translate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: word })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    wordTranslation.innerHTML = `<strong>${word}:</strong> <span class="word-translation">${data.translation}</span>`;
-                });
-            }
-            
-            // Reproducir audio de palabra individual
-            function playWordAudio(word) {
-                const audio = new Audio(`/tts?text=${encodeURIComponent(word)}&lang=en`);
-                audio.play();
             }
         });
     </script>
