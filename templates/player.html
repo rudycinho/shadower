@@ -1,38 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dual Mode Audio Player</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="data:,"> <!-- Favicon vacío para evitar error 404 -->
+    <link rel="icon" href="data:,">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Dual Mode Music Player</h1>
-            <p>Learn lyrics with TTS or original music fragments</p>
+            <h1>Lyrics Learning Studio</h1>
+            <p>Master lyrics with TTS or original music segments</p>
         </div>
         
-        <!-- Sección para subir archivos -->
-        <div class="upload-section">
+        <!-- File Upload Section -->
+        <div class="upload-section card">
             <h3>Upload Files</h3>
             <form id="uploadForm" enctype="multipart/form-data">
-                <div>
-                    <label>MP3 File:</label>
+                <div class="file-input-group">
+                    <label>MP3 File: <span class="required">*</span></label>
                     <input type="file" name="mp3" accept=".mp3" required>
                 </div>
-                <div>
+                <div class="file-input-group">
                     <label>SRT File (optional):</label>
                     <input type="file" name="srt" accept=".srt">
                 </div>
-                <button type="submit">Upload</button>
+                <button type="submit" class="upload-btn">
+                    <span class="icon">📤</span> Upload Files
+                </button>
             </form>
-            <div id="uploadStatus"></div>
+            <div id="uploadStatus" class="status-message"></div>
         </div>
         
-        <div class="media-selector">
+        <!-- Media Selection -->
+        <div class="media-selector card">
             <label for="media-select">Select Media:</label>
             <select id="media-select">
-                <option value="">-- Select --</option>
+                <option value="">-- Select Track --</option>
                 {% for media in media_files %}
                     <option value="{{ media.mp3 }}" data-srt="{{ media.srt }}">
                         {{ media.mp3 }} {% if media.srt %}(with subtitles){% endif %}
@@ -41,9 +46,10 @@
             </select>
         </div>
         
+        <!-- Player Section -->
         <div class="player-section">
-            <div class="audio-player">
-                <audio id="audioPlayer" controls style="width: 100%"></audio>
+            <div class="audio-player card">
+                <audio id="audioPlayer" controls></audio>
             </div>
             
             <div class="progress-container">
@@ -56,27 +62,31 @@
                 </div>
             </div>
             
-            <div class="mode-selector">
-                <button id="ttsModeBtn" class="mode-btn active">TTS Mode</button>
-                <button id="musicModeBtn" class="mode-btn">Music Fragment Mode</button>
+            <div class="mode-selector card">
+                <button id="ttsModeBtn" class="mode-btn active">
+                    <span class="icon">🗣️</span> TTS Mode
+                </button>
+                <button id="musicModeBtn" class="mode-btn">
+                    <span class="icon">🎵</span> Music Mode
+                </button>
             </div>
             
-            <div class="line-display">
+            <div class="line-display card">
                 <div id="currentLine" class="current-line">Select a media file to begin</div>
                 <div id="translation" class="translation"></div>
             </div>
             
             <div class="controls">
-                <button id="prevBtn" class="control-btn nav-btn">
+                <button id="prevBtn" class="control-btn nav-btn" title="Previous Line">
                     <span class="icon">⏮</span> Prev
                 </button>
-                <button id="playLineBtn" class="control-btn play-btn">
+                <button id="playLineBtn" class="control-btn play-btn" title="Play Current Line">
                     <span class="icon">▶</span> Play Line
                 </button>
-                <button id="playMusicBtn" class="control-btn play-music-btn">
+                <button id="playMusicBtn" class="control-btn play-music-btn" title="Play Music Segment">
                     <span class="icon">🎵</span> Play Music
                 </button>
-                <button id="nextBtn" class="control-btn nav-btn">
+                <button id="nextBtn" class="control-btn nav-btn" title="Next Line">
                     Next <span class="icon">⏭</span>
                 </button>
             </div>
