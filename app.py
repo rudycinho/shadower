@@ -10,7 +10,6 @@ from googletrans import Translator
 from gtts import gTTS
 
 app = Flask(__name__)
-translator = Translator()
 
 # Configuración
 UPLOAD_FOLDER = 'temp_uploads'
@@ -21,7 +20,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 class SRTProcessor:
-    """Clase para procesar archivos SRT"""
+    """Clase para procesar archivos SRT sin modificaciones especiales"""
     @staticmethod
     def parse_srt(file_path):
         subtitles = []
@@ -39,6 +38,7 @@ class SRTProcessor:
                     
                     # Decodificar caracteres especiales
                     text = html.unescape(text)
+                    # Eliminar etiquetas HTML
                     text = re.sub(r'<[^>]+>', '', text)
                     
                     # Parsear tiempos
@@ -56,7 +56,7 @@ class SRTProcessor:
         except Exception as e:
             print(f"Error parsing SRT: {e}")
             return []
-
+    
     @staticmethod
     def parse_time(time_str):
         parts = time_str.replace(',', ':').split(':')
@@ -118,7 +118,10 @@ class TTSService:
     @staticmethod
     def generate_tts_audio(text, lang='en', slow=False):
         try:
-            tts = gTTS(text=text, lang=lang, slow=slow)
+            # Solo eliminamos el símbolo musical para que no se pronuncie
+            clean_text = text.replace('♪', '')
+            
+            tts = gTTS(text=clean_text, lang=lang, slow=slow)
             audio_io = io.BytesIO()
             tts.write_to_fp(audio_io)
             audio_io.seek(0)
@@ -140,6 +143,10 @@ def index():
 def load_srt(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
         subtitles = SRTProcessor.parse_srt(file_path)
         return jsonify(subtitles)
     except Exception as e:
