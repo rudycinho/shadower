@@ -6,7 +6,14 @@ class TTSService:
     @staticmethod
     def generate_tts_audio(text, lang='en', slow=False):
         try:
-            clean_text = text.replace('♪', '')
+            # Manejar texto vacío o nulo
+            if not text or text.strip() == '':
+                return None
+                
+            clean_text = text.replace('♪', '').strip()
+            if not clean_text:
+                return None
+                
             tts = gTTS(text=clean_text, lang=lang, slow=slow)
             audio_io = io.BytesIO()
             tts.write_to_fp(audio_io)
@@ -22,6 +29,10 @@ class TTSService:
         tts_files = {}
         
         for sub in subtitles:
+            # Verificar si el subtítulo tiene texto
+            if 'text' not in sub or not sub['text']:
+                continue
+                
             audio_io = TTSService.generate_tts_audio(sub['text'], lang=lang)
             if audio_io:
                 filename = f"line_{sub['index']}.mp3"
@@ -29,4 +40,5 @@ class TTSService:
                 with open(filepath, 'wb') as f:
                     f.write(audio_io.getvalue())
                 tts_files[sub['index']] = filename
+        
         return tts_files

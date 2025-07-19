@@ -11,9 +11,16 @@ class MediaManager:
         
         media_files = []
         for mp3 in mp3_files:
+            # Manejar nombres de archivo sin '_'
+            if '_' not in mp3:
+                continue
+                
             parts = mp3.split('_', 1)
-            if len(parts) < 2: continue
-            base_name = parts[1].rsplit('.', 1)[0]
+            if len(parts) < 2: 
+                continue
+                
+            # Usar os.path para manejar extensiones correctamente
+            base_name = os.path.splitext(parts[1])[0]
             
             srt_match = None
             for f in os.listdir(self.upload_folder):
@@ -23,8 +30,10 @@ class MediaManager:
             
             processed_match = None
             for f in os.listdir(self.processed_folder):
+                # Manejar múltiples posibles archivos procesados
                 if f.endswith('_processed.json') and f.split('_', 1)[0] == base_name:
                     processed_match = f
+                    # Preferir el más reciente si hay múltiples?
                     break
             
             media_files.append({
