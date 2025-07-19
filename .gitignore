@@ -22,4 +22,6 @@ __pycache__/
 # Ignorar carpetas de dependencias (si usas Python)
 venv/
 env/
+.vscode/settings.json
+
 

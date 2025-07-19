@@ -5,6 +5,15 @@ let lineAudio = new Audio();
 let currentMode = 'tts';
 let musicFragmentTimeout;
 
+// Función para manejar errores de reproducción
+function handlePlayError(error) {
+    if (error.name === 'AbortError') {
+        console.log('Playback aborted intentionally');
+    } else {
+        console.error('Error playing audio:', error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     audioPlayer = document.getElementById('audioPlayer');
     const mediaSelect = document.getElementById('media-select');
@@ -21,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progressFill');
     const currentTime = document.getElementById('currentTime');
     const totalTime = document.getElementById('totalTime');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadStatus = document.getElementById('uploadStatus');
     
     // Formatear tiempo para mostrar
     function formatTime(seconds) {
@@ -116,11 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentMode === 'tts') {
                 // Modo TTS: Reproducir con síntesis de voz
                 lineAudio.src = `/tts?text=${encodeURIComponent(line.text)}`;
-                lineAudio.play();
+                lineAudio.play().catch(handlePlayError);
             } else {
                 // Modo Música: Saltar al inicio de la línea
                 audioPlayer.currentTime = line.start;
-                audioPlayer.play();
+                audioPlayer.play().catch(handlePlayError);
             }
         }
     });
@@ -132,19 +143,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Cancelar cualquier reproducción anterior
             if (musicFragmentTimeout) clearTimeout(musicFragmentTimeout);
+            
+            // Pausar y luego reproducir después de un breve retraso para evitar AbortError
             audioPlayer.pause();
-            
-            // Establecer tiempo de inicio
-            audioPlayer.currentTime = line.start;
-            audioPlayer.play();
-            
-            // Calcular duración del fragmento
-            const fragmentDuration = (line.end - line.start) * 1000;
-            
-            // Detener después de la duración del fragmento
-            musicFragmentTimeout = setTimeout(() => {
-                audioPlayer.pause();
-            }, fragmentDuration);
+            setTimeout(() => {
+                audioPlayer.currentTime = line.start;
+                audioPlayer.play()
+                    .then(() => {
+                        const fragmentDuration = (line.end - line.start) * 1000;
+                        musicFragmentTimeout = setTimeout(() => {
+                            audioPlayer.pause();
+                        }, fragmentDuration);
+                    })
+                    .catch(handlePlayError);
+            }, 50);
         }
     });
     
@@ -176,4 +188,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+    
+    // Manejar subida de archivos
+    uploadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(uploadForm);
+        
+        uploadStatus.textContent = 'Uploading files...';
+        
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                uploadStatus.textContent = 'Upload successful!';
+                // Actualizar la lista de selección
+                const option = document.createElement('option');
+                option.value = data.mp3;
+                option.dataset.srt = data.srt || '';
+                option.textContent = `${data.mp3} ${data.srt ? '(with subtitles)' : ''}`;
+                mediaSelect.appendChild(option);
+            } else {
+                uploadStatus.textContent = `Error: ${data.error}`;
+            }
+        })
+        .catch(error => {
+            uploadStatus.textContent = 'Upload failed';
+            console.error('Upload error:', error);
+        });
+    });
 });

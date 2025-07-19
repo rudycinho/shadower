@@ -3,12 +3,30 @@
 <head>
     <title>Dual Mode Audio Player</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:,"> <!-- Favicon vacío para evitar error 404 -->
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Dual Mode Music Player</h1>
             <p>Learn lyrics with TTS or original music fragments</p>
+        </div>
+        
+        <!-- Sección para subir archivos -->
+        <div class="upload-section">
+            <h3>Upload Files</h3>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div>
+                    <label>MP3 File:</label>
+                    <input type="file" name="mp3" accept=".mp3" required>
+                </div>
+                <div>
+                    <label>SRT File (optional):</label>
+                    <input type="file" name="srt" accept=".srt">
+                </div>
+                <button type="submit">Upload</button>
+            </form>
+            <div id="uploadStatus"></div>
         </div>
         
         <div class="media-selector">
