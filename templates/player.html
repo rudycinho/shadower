@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual Mode Audio Player</title>
+    <title>Lyrics Learning Studio</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="data:,">
 </head>
@@ -39,8 +39,12 @@
             <select id="media-select">
                 <option value="">-- Select Track --</option>
                 {% for media in media_files %}
-                    <option value="{{ media.mp3 }}" data-srt="{{ media.srt }}">
-                        {{ media.mp3 }} {% if media.srt %}(with subtitles){% endif %}
+                    <option value="{{ media.mp3 }}" 
+                            data-srt="{{ media.srt }}" 
+                            data-processed="{{ media.processed }}">
+                        {{ media.mp3 }} 
+                        {% if media.srt %}(with subtitles){% endif %}
+                        {% if media.processed %}(processed){% endif %}
                     </option>
                 {% endfor %}
             </select>

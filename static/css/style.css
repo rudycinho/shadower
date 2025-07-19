@@ -451,3 +451,48 @@ audio::-webkit-media-controls-panel {
         font-size: 1rem;
     }
 }
+
+/* Añadir estos estilos al final del archivo CSS existente */
+
+.status-message {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.required {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.card {
+    background: rgba(29, 53, 87, 0.92);
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 25px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+}
+
+.file-input-group {
+    margin-bottom: 20px;
+}
+
+.file-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* Mantener los estilos existentes y añadir los nuevos */
