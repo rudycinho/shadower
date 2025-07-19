@@ -4,99 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lyrics Learning Studio</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:,">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#8B5CF6',
+                        dark: '#1F2937',
+                        light: '#F9FAFB'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles to complement Tailwind */
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .mode-btn.active {
+            background-color: #4F46E5;
+            color: white;
+        }
+        
+        .file-input::file-selector-button {
+            background-color: #e0e7ff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            color: #4F46E5;
+            font-weight: 500;
+        }
+        
+        .file-input::file-selector-button:hover {
+            background-color: #c7d2fe;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .control-btn {
+                flex: 1 0 40%;
+            }
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Lyrics Learning Studio</h1>
-            <p>Master lyrics with TTS or original music segments</p>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-500 to-indigo-600 bg-clip-text text-transparent mb-3">Lyrics Learning Studio</h1>
+            <p class="text-lg text-gray-300 max-w-2xl mx-auto">Master lyrics with TTS or original music segments. Responsive design for all devices.</p>
         </div>
         
-        <!-- File Upload Section -->
-        <div class="upload-section card">
-            <h3>Upload Files</h3>
-            <form id="uploadForm" enctype="multipart/form-data">
-                <div class="file-input-group">
-                    <label>MP3 File: <span class="required">*</span></label>
-                    <input type="file" name="mp3" accept=".mp3" required>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column: Upload and Media Selection -->
+            <div class="space-y-6">
+                <!-- File Upload Section -->
+                <div class="card bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4 text-indigo-300">Upload Files</h3>
+                    <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+                        <div>
+                            <label class="block mb-2 text-gray-300">MP3 File: <span class="text-red-500">*</span></label>
+                            <input type="file" name="mp3" accept=".mp3" required 
+                                   class="file-input w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-300">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-gray-300">SRT File (optional):</label>
+                            <input type="file" name="srt" accept=".srt" 
+                                   class="file-input w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-300">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center transition">
+                            <span class="mr-2">📤</span> Upload Files
+                        </button>
+                    </form>
+                    <div id="uploadStatus" class="mt-4 text-center py-2 rounded-lg"></div>
                 </div>
-                <div class="file-input-group">
-                    <label>SRT File (optional):</label>
-                    <input type="file" name="srt" accept=".srt">
-                </div>
-                <button type="submit" class="upload-btn">
-                    <span class="icon">📤</span> Upload Files
-                </button>
-            </form>
-            <div id="uploadStatus" class="status-message"></div>
-        </div>
-        
-        <!-- Media Selection -->
-        <div class="media-selector card">
-            <label for="media-select">Select Media:</label>
-            <select id="media-select">
-                <option value="">-- Select Track --</option>
-                {% for media in media_files %}
-                    <option value="{{ media.mp3 }}" 
-                            data-srt="{{ media.srt }}" 
-                            data-processed="{{ media.processed }}">
-                        {{ media.mp3 }} 
-                        {% if media.srt %}(with subtitles){% endif %}
-                        {% if media.processed %}(processed){% endif %}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <!-- Player Section -->
-        <div class="player-section">
-            <div class="audio-player card">
-                <audio id="audioPlayer" controls></audio>
-            </div>
-            
-            <div class="progress-container">
-                <div class="progress-info">
-                    <span id="currentTime">0:00</span>
-                    <span id="totalTime">0:00</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+                
+                <!-- Media Selection -->
+                <div class="card bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
+                    <label class="block mb-2 text-gray-300">Select Media:</label>
+                    <select id="media-select" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-300">
+                        <option value="">-- Select Track --</option>
+                        {% for media in media_files %}
+                            <option value="{{ media.mp3 }}" 
+                                    data-srt="{{ media.srt }}" 
+                                    data-processed="{{ media.processed }}">
+                                {{ media.mp3 }} 
+                                {% if media.srt %}(with subtitles){% endif %}
+                                {% if media.processed %}(processed){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
             
-            <div class="mode-selector card">
-                <button id="ttsModeBtn" class="mode-btn active">
-                    <span class="icon">🗣️</span> TTS Mode
-                </button>
-                <button id="musicModeBtn" class="mode-btn">
-                    <span class="icon">🎵</span> Music Mode
-                </button>
-            </div>
-            
-            <div class="line-display card">
-                <div id="currentLine" class="current-line">Select a media file to begin</div>
-                <div id="translation" class="translation"></div>
-            </div>
-            
-            <div class="controls">
-                <button id="prevBtn" class="control-btn nav-btn" title="Previous Line">
-                    <span class="icon">⏮</span> Prev
-                </button>
-                <button id="playLineBtn" class="control-btn play-btn" title="Play Current Line">
-                    <span class="icon">▶</span> Play Line
-                </button>
-                <button id="playMusicBtn" class="control-btn play-music-btn" title="Play Music Segment">
-                    <span class="icon">🎵</span> Play Music
-                </button>
-                <button id="nextBtn" class="control-btn nav-btn" title="Next Line">
-                    Next <span class="icon">⏭</span>
-                </button>
-            </div>
-            
-            <div class="line-counter">
-                Line <span id="currentLineNum">0</span> of <span id="totalLines">0</span>
+            <!-- Right Column: Player Section -->
+            <div class="space-y-6">
+                <!-- Player Controls -->
+                <div class="card bg-gray-800 rounded-xl p-6 border border-gray-700 shadow-lg">
+                    <div class="audio-player mb-4">
+                        <audio id="audioPlayer" controls class="w-full"></audio>
+                    </div>
+                    
+                    <div class="progress-container mb-6">
+                        <div class="progress-info flex justify-between text-sm text-gray-400 mb-2">
+                            <span id="currentTime">0:00</span>
+                            <span id="totalTime">0:00</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mode-selector flex justify-center space-x-4 mb-6">
+                        <button id="ttsModeBtn" class="mode-btn active rounded-lg px-5 py-2 font-medium transition">
+                            <span class="mr-2">🗣️</span> TTS Mode
+                        </button>
+                        <button id="musicModeBtn" class="mode-btn rounded-lg px-5 py-2 font-medium transition bg-gray-700 hover:bg-gray-600">
+                            <span class="mr-2">🎵</span> Music Mode
+                        </button>
+                    </div>
+                    
+                    <div class="line-display bg-gray-900 rounded-xl p-6 mb-6">
+                        <div id="currentLine" class="current-line text-xl font-semibold mb-4 text-center min-h-[60px] flex items-center justify-center">
+                            Select a media file to begin
+                        </div>
+                        <div id="translation" class="translation text-gray-400 text-center italic"></div>
+                    </div>
+                    
+                    <div class="controls flex justify-between mb-4">
+                        <button id="prevBtn" class="control-btn nav-btn bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-3 font-medium flex items-center">
+                            <span class="mr-2">⏮</span> Prev
+                        </button>
+                        <button id="playLineBtn" class="control-btn play-btn bg-indigo-600 hover:bg-indigo-700 rounded-lg px-4 py-3 font-medium flex items-center mx-2">
+                            <span class="mr-2">▶</span> Play Line
+                        </button>
+                        <button id="playMusicBtn" class="control-btn play-music-btn bg-purple-600 hover:bg-purple-700 rounded-lg px-4 py-3 font-medium flex items-center mx-2">
+                            <span class="mr-2">🎵</span> Play Music
+                        </button>
+                        <button id="nextBtn" class="control-btn nav-btn bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-3 font-medium flex items-center">
+                            Next <span class="ml-2">⏭</span>
+                        </button>
+                    </div>
+                    
+                    <div class="line-counter text-center text-gray-400 font-medium">
+                        Line <span id="currentLineNum" class="text-indigo-300">0</span> of <span id="totalLines" class="text-indigo-300">0</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
