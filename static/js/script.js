@@ -71,14 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const processedFile = selectedOption.dataset.processed;
         
         if (mp3File) {
-            audioPlayer.src = `/audio/${encodeURIComponent(mp3File)}`;
+            // Actualizado: Ruta de audio con prefijo /api
+            audioPlayer.src = `/api/audio/${encodeURIComponent(mp3File)}`;
             currentIndex = -1;
             currentLineEl.textContent = "Loading...";
             translationEl.textContent = "";
             
             if (processedFile) {
-                // Cargar versión procesada (con traducción y TTS)
-                fetch(`/load_processed/${encodeURIComponent(processedFile)}`)
+                // Actualizado: Ruta de carga procesada con prefijo /api
+                fetch(`/api/load_processed/${encodeURIComponent(processedFile)}`)
                     .then(response => response.json())
                     .then(data => {
                         subtitles = data;
@@ -91,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         currentLineEl.textContent = "Error loading subtitles";
                     });
             } else if (srtFile) {
-                // Cargar SRT original
-                fetch(`/load_srt/${encodeURIComponent(srtFile)}`)
+                // Actualizado: Ruta de carga SRT con prefijo /api
+                fetch(`/api/load_srt/${encodeURIComponent(srtFile)}`)
                     .then(response => response.json())
                     .then(data => {
                         subtitles = data;
@@ -131,13 +132,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const line = subtitles[currentIndex];
             
             if (currentMode === 'tts') {
-                // Usar audio TTS pregenerado si está disponible
+                // Actualizado: Ruta de TTS con prefijo /api
                 if (line.tts_path) {
-                    lineAudio.src = `/tts_audio/${encodeURIComponent(line.tts_path)}`;
+                    lineAudio.src = `/api/tts_audio/${encodeURIComponent(line.tts_path)}`;
                     lineAudio.play().catch(handlePlayError);
                 } else {
-                    // Fallback a TTS en tiempo real
-                    lineAudio.src = `/tts?text=${encodeURIComponent(line.text)}`;
+                    // Actualizado: Ruta de TTS en tiempo real con prefijo /api
+                    lineAudio.src = `/api/tts?text=${encodeURIComponent(line.text)}`;
                     lineAudio.play().catch(handlePlayError);
                 }
             } else {
@@ -174,12 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLineEl.textContent = line.text;
             currentLineNum.textContent = currentIndex + 1;
             
-            // Mostrar traducción preprocesada si está disponible
             if (line.translation) {
                 translationEl.textContent = line.translation;
             } else {
-                // Fallback a traducción en tiempo real
-                fetch('/translate', {
+                // Actualizado: Ruta de traducción con prefijo /api
+                fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: line.text })
@@ -207,7 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadStatus.textContent = 'Uploading and processing files...';
         uploadStatus.style.color = 'yellow';
         
-        fetch('/upload', {
+        // Actualizado: Ruta de upload con prefijo /api
+        fetch('/api/upload', {
             method: 'POST',
             body: formData
         })
@@ -218,9 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadStatus.textContent = 'Processing SRT... this may take a moment';
                     uploadStatus.style.color = 'yellow';
                     
-                    // Función para verificar el estado de procesamiento
                     const checkProcessingStatus = () => {
-                        fetch(`/load_media/${encodeURIComponent(data.mp3)}`)
+                        // Actualizado: Ruta de carga de media con prefijo /api
+                        fetch(`/api/load_media/${encodeURIComponent(data.mp3)}`)
                             .then(response => response.json())
                             .then(mediaData => {
                                 if (mediaData.error) {
@@ -230,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     uploadStatus.textContent = 'Upload and processing successful!';
                                     uploadStatus.style.color = '#2ecc71';
                                     
-                                    // Actualizar la lista de selección
                                     const option = document.createElement('option');
                                     option.value = data.mp3;
                                     option.dataset.srt = data.srt;
@@ -238,7 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     option.textContent = `${data.mp3} (with subtitles)`;
                                     mediaSelect.appendChild(option);
                                 } else {
-                                    // Continuar verificando
                                     setTimeout(checkProcessingStatus, 2000);
                                 }
                             })
@@ -249,13 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                     };
                     
-                    // Comenzar a verificar después de 3 segundos
                     setTimeout(checkProcessingStatus, 3000);
                 } else {
                     uploadStatus.textContent = 'Upload successful!';
                     uploadStatus.style.color = '#2ecc71';
                     
-                    // Actualizar la lista de selección
                     const option = document.createElement('option');
                     option.value = data.mp3;
                     option.textContent = data.mp3;
