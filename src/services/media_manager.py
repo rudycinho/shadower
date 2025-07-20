@@ -1,5 +1,7 @@
 import os
 import uuid
+from src.models import MediaFile
+from src.extensions import db
 
 class MediaManager:
     def __init__(self, upload_folder, processed_folder):
@@ -7,41 +9,16 @@ class MediaManager:
         self.processed_folder = processed_folder
     
     def get_media_files(self):
-        mp3_files = [f for f in os.listdir(self.upload_folder) if f.endswith('.mp3')]
-        
-        media_files = []
-        for mp3 in mp3_files:
-            # Manejar nombres de archivo sin '_'
-            if '_' not in mp3:
-                continue
-                
-            parts = mp3.split('_', 1)
-            if len(parts) < 2: 
-                continue
-                
-            # Usar os.path para manejar extensiones correctamente
-            base_name = os.path.splitext(parts[1])[0]
-            
-            srt_match = None
-            for f in os.listdir(self.upload_folder):
-                if f.endswith('.srt') and f.split('_', 1)[-1] == base_name + '.srt':
-                    srt_match = f
-                    break
-            
-            processed_match = None
-            for f in os.listdir(self.processed_folder):
-                # Manejar múltiples posibles archivos procesados
-                if f.endswith('_processed.json') and f.split('_', 1)[0] == base_name:
-                    processed_match = f
-                    # Preferir el más reciente si hay múltiples?
-                    break
-            
-            media_files.append({
-                'mp3': mp3,
-                'srt': srt_match,
-                'processed': processed_match
-            })
-        return media_files
+        # Obtener todos los archivos de la base de datos
+        media_files = MediaFile.query.all()
+        return [{
+            'id': mf.id,
+            'mp3': mf.mp3_filename,
+            'srt': mf.srt_filename,
+            'processed': mf.processed_json,
+            'tts_folder': mf.tts_folder,
+            'original_name': mf.original_name
+        } for mf in media_files]
     
     def allowed_file(self, filename):
         return '.' in filename and \
@@ -55,3 +32,23 @@ class MediaManager:
             file.save(file_path)
             return filename
         return None
+    
+    def create_media_record(self, original_name, mp3_filename, srt_filename=None):
+        media_file = MediaFile(
+            original_name=original_name,
+            mp3_filename=mp3_filename,
+            srt_filename=srt_filename
+        )
+        db.session.add(media_file)
+        db.session.commit()
+        return media_file
+    
+    def update_media_record(self, media_id, processed_json=None, tts_folder=None):
+        media_file = MediaFile.query.get(media_id)
+        if media_file:
+            if processed_json:
+                media_file.processed_json = processed_json
+            if tts_folder:
+                media_file.tts_folder = tts_folder
+            db.session.commit()
+        return media_file

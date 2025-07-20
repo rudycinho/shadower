@@ -5,7 +5,7 @@ class TranslationService:
         self.translator = Translator()
     
     def translate_text(self, text, src='auto', dest='es'):
-        if not text or text.strip() == '':
+        if not text or not isinstance(text, str) or text.strip() == '':
             return ""
         try:
             translation = self.translator.translate(text, src=src, dest=dest)

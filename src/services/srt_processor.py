@@ -20,6 +20,9 @@ class SRTProcessor:
                     text = re.sub(r'<[^>]+>', '', text)
                     
                     start_end = timecode.split(' --> ')
+                    if len(start_end) != 2:
+                        continue
+                        
                     start = SRTProcessor.parse_time(start_end[0])
                     end = SRTProcessor.parse_time(start_end[1])
                     

@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, send_file
 import os
 import json
-from src.services.media_manager import MediaManager
-from src.services.srt_processor import SRTProcessor
 from config import Config
+from src.services.srt_processor import SRTProcessor
+from src.models import MediaFile
+from src.extensions import db
 
 media_bp = Blueprint('media', __name__)
-media_manager = MediaManager(Config.UPLOAD_FOLDER, Config.PROCESSED_FOLDER)
 
 @media_bp.route('/load_srt/<filename>')
 def load_srt(filename):
@@ -31,28 +31,18 @@ def load_processed(filename):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@media_bp.route('/load_media/<mp3_filename>')
-def load_media(mp3_filename):
+@media_bp.route('/load_media/<int:media_id>')
+def load_media(media_id):
     try:
-        # Verificar si el archivo MP3 existe
-        mp3_path = os.path.join(Config.UPLOAD_FOLDER, mp3_filename)
-        if not os.path.exists(mp3_path):
-            return jsonify({'error': 'MP3 file not found'}), 404
-        
-        # Extraer base_name de manera segura
-        if '_' not in mp3_filename:
-            return jsonify({'error': 'Invalid filename format'}), 400
-            
-        base_name = mp3_filename.split('_', 1)[1].rsplit('.', 1)[0]
-        
-        processed_files = [f for f in os.listdir(Config.PROCESSED_FOLDER) 
-                          if f.startswith(base_name) and f.endswith('_processed.json')]
-        
-        processed_filename = processed_files[0] if processed_files else None
+        media_file = MediaFile.query.get(media_id)
+        if not media_file:
+            return jsonify({'error': 'Media file not found'}), 404
         
         return jsonify({
-            'mp3': mp3_filename,
-            'processed': processed_filename
+            'mp3': media_file.mp3_filename,
+            'srt': media_file.srt_filename,
+            'processed': media_file.processed_json,
+            'tts_folder': media_file.tts_folder
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

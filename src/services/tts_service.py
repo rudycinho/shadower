@@ -7,7 +7,7 @@ class TTSService:
     def generate_tts_audio(text, lang='en', slow=False):
         try:
             # Manejar texto vacío o nulo
-            if not text or text.strip() == '':
+            if not text or not isinstance(text, str) or text.strip() == '':
                 return None
                 
             clean_text = text.replace('♪', '').strip()

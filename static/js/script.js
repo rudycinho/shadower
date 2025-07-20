@@ -66,50 +66,58 @@ document.addEventListener('DOMContentLoaded', () => {
     
     mediaSelect.addEventListener('change', () => {
         const selectedOption = mediaSelect.options[mediaSelect.selectedIndex];
-        const mp3File = selectedOption.value;
-        const srtFile = selectedOption.dataset.srt;
-        const processedFile = selectedOption.dataset.processed;
+        const mediaId = selectedOption.value;
         
-        if (mp3File) {
-            // Actualizado: Ruta de audio con prefijo /api
-            audioPlayer.src = `/api/audio/${encodeURIComponent(mp3File)}`;
-            currentIndex = -1;
-            currentLineEl.textContent = "Loading...";
-            translationEl.textContent = "";
-            
-            if (processedFile) {
-                // Actualizado: Ruta de carga procesada con prefijo /api
-                fetch(`/api/load_processed/${encodeURIComponent(processedFile)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        subtitles = data;
-                        totalLines.textContent = subtitles.length;
-                        currentIndex = 0;
-                        updateLineDisplay();
-                    })
-                    .catch(error => {
-                        console.error('Error loading processed subtitles:', error);
-                        currentLineEl.textContent = "Error loading subtitles";
-                    });
-            } else if (srtFile) {
-                // Actualizado: Ruta de carga SRT con prefijo /api
-                fetch(`/api/load_srt/${encodeURIComponent(srtFile)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        subtitles = data;
-                        totalLines.textContent = subtitles.length;
-                        currentIndex = 0;
-                        updateLineDisplay();
-                    })
-                    .catch(error => {
-                        console.error('Error loading subtitles:', error);
-                        currentLineEl.textContent = "Error loading subtitles";
-                    });
-            } else {
-                subtitles = [];
-                totalLines.textContent = "0";
-                currentLineEl.textContent = "No subtitles available";
-            }
+        if (mediaId) {
+            // Obtener detalles del archivo multimedia desde la API
+            fetch(`/api/load_media/${mediaId}`)
+                .then(response => response.json())
+                .then(mediaData => {
+                    if (mediaData.error) {
+                        console.error(mediaData.error);
+                        return;
+                    }
+                    
+                    audioPlayer.src = `/api/audio/${encodeURIComponent(mediaData.mp3)}`;
+                    currentIndex = -1;
+                    currentLineEl.textContent = "Loading...";
+                    translationEl.textContent = "";
+                    
+                    if (mediaData.processed) {
+                        fetch(`/api/load_processed/${encodeURIComponent(mediaData.processed)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                subtitles = data;
+                                totalLines.textContent = subtitles.length;
+                                currentIndex = 0;
+                                updateLineDisplay();
+                            })
+                            .catch(error => {
+                                console.error('Error loading processed subtitles:', error);
+                                currentLineEl.textContent = "Error loading subtitles";
+                            });
+                    } else if (mediaData.srt) {
+                        fetch(`/api/load_srt/${encodeURIComponent(mediaData.srt)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                subtitles = data;
+                                totalLines.textContent = subtitles.length;
+                                currentIndex = 0;
+                                updateLineDisplay();
+                            })
+                            .catch(error => {
+                                console.error('Error loading subtitles:', error);
+                                currentLineEl.textContent = "Error loading subtitles";
+                            });
+                    } else {
+                        subtitles = [];
+                        totalLines.textContent = "0";
+                        currentLineEl.textContent = "No subtitles available";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading media details:', error);
+                });
         }
     });
     
@@ -132,12 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const line = subtitles[currentIndex];
             
             if (currentMode === 'tts') {
-                // Actualizado: Ruta de TTS con prefijo /api
                 if (line.tts_path) {
                     lineAudio.src = `/api/tts_audio/${encodeURIComponent(line.tts_path)}`;
                     lineAudio.play().catch(handlePlayError);
                 } else {
-                    // Actualizado: Ruta de TTS en tiempo real con prefijo /api
                     lineAudio.src = `/api/tts?text=${encodeURIComponent(line.text)}`;
                     lineAudio.play().catch(handlePlayError);
                 }
@@ -178,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (line.translation) {
                 translationEl.textContent = line.translation;
             } else {
-                // Actualizado: Ruta de traducción con prefijo /api
                 fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -207,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadStatus.textContent = 'Uploading and processing files...';
         uploadStatus.style.color = 'yellow';
         
-        // Actualizado: Ruta de upload con prefijo /api
         fetch('/api/upload', {
             method: 'POST',
             body: formData
@@ -220,22 +224,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadStatus.style.color = 'yellow';
                     
                     const checkProcessingStatus = () => {
-                        // Actualizado: Ruta de carga de media con prefijo /api
-                        fetch(`/api/load_media/${encodeURIComponent(data.mp3)}`)
+                        fetch(`/api/load_media/${data.media_id}`)
                             .then(response => response.json())
                             .then(mediaData => {
                                 if (mediaData.error) {
-                                    uploadStatus.textContent = 'Error checking status: ' + mediaData.error;
+                                    uploadStatus.textContent = 'Error: ' + mediaData.error;
                                     uploadStatus.style.color = '#e74c3c';
                                 } else if (mediaData.processed) {
                                     uploadStatus.textContent = 'Upload and processing successful!';
                                     uploadStatus.style.color = '#2ecc71';
                                     
                                     const option = document.createElement('option');
-                                    option.value = data.mp3;
-                                    option.dataset.srt = data.srt;
+                                    option.value = data.media_id;
+                                    option.dataset.mp3 = mediaData.mp3;
+                                    option.dataset.srt = mediaData.srt;
                                     option.dataset.processed = mediaData.processed;
-                                    option.textContent = `${data.mp3} (with subtitles)`;
+                                    option.textContent = `${mediaData.mp3.split('_', 2)[1]} (with subtitles)`;
                                     mediaSelect.appendChild(option);
                                 } else {
                                     setTimeout(checkProcessingStatus, 2000);
@@ -254,8 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadStatus.style.color = '#2ecc71';
                     
                     const option = document.createElement('option');
-                    option.value = data.mp3;
-                    option.textContent = data.mp3;
+                    option.value = data.media_id;
+                    option.dataset.mp3 = data.mp3;
+                    option.textContent = data.mp3.split('_', 2)[1];
                     mediaSelect.appendChild(option);
                 }
             } else {
