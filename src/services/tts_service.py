@@ -25,6 +25,7 @@ class TTSService:
     
     @staticmethod
     def generate_all_tts(subtitles, lang='en', output_folder='tts_audio'):
+        # Usamos la carpeta permanente PROCESSED_FOLDER
         os.makedirs(output_folder, exist_ok=True)
         tts_files = {}
         

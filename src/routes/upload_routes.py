@@ -36,6 +36,7 @@ def process_srt_file(app, srt_path, mp3_filename, media_id):
             translator = TranslationService()
             translated_subs = translator.translate_srt(subtitles)
             
+            # Usamos la carpeta permanente PROCESSED_FOLDER
             tts_folder = os.path.join(Config.PROCESSED_FOLDER, f"{original_name}_tts")
             os.makedirs(tts_folder, exist_ok=True)
             

@@ -28,6 +28,7 @@ class MediaManager:
         if file and self.allowed_file(file.filename):
             unique_id = str(uuid.uuid4())[:8]
             filename = f"{unique_id}_{file.filename}"
+            # Guardamos en la carpeta permanente UPLOAD_FOLDER
             file_path = os.path.join(self.upload_folder, filename)
             file.save(file_path)
             return filename

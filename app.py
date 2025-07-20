@@ -1,12 +1,11 @@
 from flask import Flask
 from config import Config
-from src.utils.file_utils import clean_temp_folder
 from src.extensions import db
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    Config.init_app(app)
+    Config.init_app(app)  # Esto crea las carpetas sin limpiarlas
     
     # Inicializar extensiones
     db.init_app(app)
@@ -19,7 +18,7 @@ def create_app():
         from src.routes.upload_routes import upload_bp
         
         db.create_all()
-        clean_temp_folder(app.config['UPLOAD_FOLDER'], app.config['PROCESSED_FOLDER'])
+        # Eliminamos la limpieza de carpetas temporales
         
         # Registrar blueprints
         app.register_blueprint(main_bp)

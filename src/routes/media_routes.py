@@ -11,6 +11,7 @@ media_bp = Blueprint('media', __name__)
 @media_bp.route('/load_srt/<filename>')
 def load_srt(filename):
     try:
+        # Usamos la carpeta permanente UPLOAD_FOLDER
         file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
         if not os.path.exists(file_path):
             return jsonify({'error': 'File not found'}), 404
@@ -22,6 +23,7 @@ def load_srt(filename):
 @media_bp.route('/load_processed/<filename>')
 def load_processed(filename):
     try:
+        # Usamos la carpeta permanente PROCESSED_FOLDER
         file_path = os.path.join(Config.PROCESSED_FOLDER, filename)
         if not os.path.exists(file_path):
             return jsonify({'error': 'Processed file not found'}), 404
@@ -49,6 +51,7 @@ def load_media(media_id):
 
 @media_bp.route('/audio/<filename>')
 def serve_audio(filename):
+    # Usamos la carpeta permanente UPLOAD_FOLDER
     file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
     if not os.path.exists(file_path):
         return jsonify({'error': 'File not found'}), 404
