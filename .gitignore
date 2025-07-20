@@ -10,11 +10,15 @@
 # Ignorar archivos temporales de sistema
 *.swp
 *.tmp
+*.bak
+*.swp
 *~
 
 # Ignorar carpetas de caché comunes
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Ignorar logs
 *.log
@@ -22,6 +26,21 @@ __pycache__/
 # Ignorar carpetas de dependencias (si usas Python)
 venv/
 env/
+.env
+.venv/
 .vscode/settings.json
 
+# Ignorar archivos de configuración de IDE
+.idea/
+.vscode/
 
+# Ignorar base de datos SQLite
+instance/
+
+# Ignorar archivos de datos generados
+processed/
+uploads/
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
